@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+# Check Nginx status
+systemctl status nginx | grep running >/dev/null 2>&1
+if [[ $? -ne 0 ]]; then
+  echo "Error: Nginx is not running. Please start it manually."
+  exit 1
+fi
+
+# Check configuration for port 80
+grep -qE '^listen\s+80;|^server\s+{\s*listen\s+80;.*}' /etc/nginx/nginx.conf
+if [[ $? -ne 0 ]]; then
+  echo "Error: Nginx configuration is not set to listen on port 80."
+  exit 1
+fi
+
+# Check for process using port 80
+process_id=$(netstat -ltpn | grep :80 | awk '{print $NF}')
+if [[ ! -z "$process_id" ]]; then
+  echo "Warning: Another process (PID: $process_id) is using port 80."
+  read -p "Do you want to try stopping the process? (y/N): " answer
+  if [[ "$answer" =~ ^[Yy]$ ]]; then
+    kill -TERM "$process_id"
+    echo "Process stopped. Please verify if Nginx can now access port 80."
+  fi
+fi
+
+# Allow port 80 in UFW firewall (if active)
+ufw app list | grep -q OpenSSH
+if [[ $? -eq 0 ]]; then
+  ufw allow 80/tcp &>/dev/null
+  echo "Added rule to allow port 80 in UFW firewall."
+fi
+
+# Restart Nginx
+systemctl reload nginx
+echo "Nginx configuration checked and reloaded. Verify if it's now listening on port 80."
