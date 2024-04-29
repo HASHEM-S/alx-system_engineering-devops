@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+systemctl status nginx | grep running || (echo "Nginx not running"; exit 1)
+
+netstat -ltpn | grep :80 && (echo "Port 80 occupied, investigate further"; exit 1)
+
+ufw app list | grep OpenSSH && ufw allow 80/tcp
+
+systemctl reload nginx
+
+echo "Nginx configuration checked and reloaded."
