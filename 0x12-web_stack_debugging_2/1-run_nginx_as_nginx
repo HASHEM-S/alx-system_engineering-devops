@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Stop nginx if it's running
+service nginx stop
+
+# Replace nginx user in nginx.conf
+sed -i 's/^user .*/user nginx;/g' /etc/nginx/nginx.conf
+
+# Update nginx listen directive
+sed -i 's/^ *listen 80.*/    listen 8080;/g' /etc/nginx/sites-available/default
+
+# Restart nginx
+service nginx start
+
