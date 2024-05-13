@@ -11,4 +11,3 @@ username=$1
 
 # Run whoami command under the specified user
 sudo -u $username whoami
-
